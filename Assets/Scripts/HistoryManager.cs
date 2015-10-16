@@ -2,14 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public enum ManyMeMode { Rewind, Snapshop, Off };
+//public enum ManyMeMode { Rewind, Snapshop, Off };
 
 public class HistoryManager : MonoBehaviour {
 	
 	public int framerate;
 	public int outputTime;
-	public ManyMeMode mode;
+	//public ManyMeMode mode;
 	public bool thirdSelf;
+	public bool rewindMode;
+	public bool snapshopMode;
 	//public int number;
 	private int outputIndex;
 
@@ -60,12 +62,12 @@ public class HistoryManager : MonoBehaviour {
 		liveTexture = manager.GetUsersLblTex();
 		rewindTexture = new Texture2D( liveTexture.width, liveTexture.height );
 		rewindTexture2 = new Texture2D( liveTexture.width, liveTexture.height );
-		if( mode == ManyMeMode.Rewind ) {
-			StartCoroutine( RewindTexture() );
-		}
-		else if( mode == ManyMeMode.Snapshop ) {
+		//if( mode == ManyMeMode.Rewind ) {
+		StartCoroutine( RewindTexture() );
+		//}
+		//else if( mode == ManyMeMode.Snapshop ) {
 			//StartCoroutine( );
-		}
+		//}
 	}
 	
 	// Update is called once per frame
@@ -73,15 +75,36 @@ public class HistoryManager : MonoBehaviour {
 		outputIndex = outputTime * framerate;
 		if(manager == null)
 			manager = KinectManager.Instance;
-		if( mode == ManyMeMode.Snapshop ) {
+		if( snapshopMode ) {
 			if( Input.GetKeyDown( KeyCode.Space ) ) {
-				snapshots.Add( new Texture2D( liveTexture.width, liveTexture.height ) );
-				Color[] savedColor = liveTexture.GetPixels();
-				snapshots[snapshots.Count-1].SetPixels( savedColor );
-				snapshotRects.Add( PrepareNewGUITexture() );
+				StartCoroutine( SaveSnapshot() );
 			} else if( Input.GetKeyDown( KeyCode.LeftAlt ) || Input.GetKeyDown( KeyCode.RightAlt ) ) {
 				snapshots.Clear();
 				snapshotRects.Clear();
+			}
+		}
+		if( Input.GetKeyDown( KeyCode.Alpha1 ) ) {
+			if( rewindMode ) {
+				rewindMode = false;
+				StopAllCoroutines();
+			} else {
+				rewindMode = true;
+				StartCoroutine( RewindTexture() );
+			}
+		} else if( Input.GetKeyDown( KeyCode.Alpha2 ) ) { 
+
+			if( snapshopMode ) {
+				snapshopMode = false;
+			} else {
+				snapshopMode = true;
+			}
+		}
+
+		if( Input.GetKeyDown( KeyCode.Alpha0 ) ) {
+			if( thirdSelf ) {
+				thirdSelf = false;
+			} else {
+				thirdSelf = true;
 			}
 		}
 		/*if(manager.IsUserDetected()) {
@@ -138,6 +161,14 @@ public class HistoryManager : MonoBehaviour {
 		}
 	}
 
+	IEnumerator SaveSnapshot() {
+		yield return new WaitForSeconds(1.0f/(float)framerate);
+		snapshots.Add( new Texture2D( liveTexture.width, liveTexture.height ) );
+		Color[] savedColor = liveTexture.GetPixels();
+		snapshots[snapshots.Count-1].SetPixels( savedColor );
+		snapshotRects.Add( PrepareNewGUITexture() );
+	}
+
 	public static Rect PrepareNewGUITexture() {
 		Rect cameraRect = Camera.main.pixelRect;
 		float rectHeight = cameraRect.height;
@@ -157,12 +188,12 @@ public class HistoryManager : MonoBehaviour {
 	{
 		// Draw live
 		GUI.DrawTexture(liveRect, manager.GetUsersClrTex());
-		if( mode == ManyMeMode.Rewind ) {
+		if( rewindMode ) {
 		GUI.DrawTexture(rewindRect, rewindTexture);
 			if( thirdSelf ) {
 				GUI.DrawTexture(rewindRect2, rewindTexture2);
 			}
-		} else if( mode == ManyMeMode.Snapshop ) {
+		} else if( snapshopMode ) {
 			for( int i = 0; i < snapshots.Count; i++ ) {
 				GUI.DrawTexture( snapshotRects[i], snapshots[i] );
 			}
