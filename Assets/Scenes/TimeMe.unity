@@ -114,7 +114,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   framerate: 8
   outputTime: 3
-  thirdSelf: 1
+  thirdSelf: 0
   rewindMode: 1
   snapshopMode: 0
 --- !u!4 &888580863
